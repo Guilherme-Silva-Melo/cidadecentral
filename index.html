@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ponto médio entre cidades</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+
+body{
+font-family: Arial;
+text-align:center;
+}
+
+#map{
+height:500px;
+width:90%;
+margin:auto;
+margin-top:20px;
+}
+
+input{
+padding:10px;
+margin:5px;
+width:250px;
+}
+
+button{
+padding:10px 20px;
+margin:5px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>Cidade no meio de várias cidades</h2>
+
+<div id="inputs">
+<input class="city" placeholder="Digite uma cidade">
+<input class="city" placeholder="Digite outra cidade">
+</div>
+
+<br>
+
+<button onclick="addCity()">Adicionar cidade</button>
+<button onclick="calcular()">Calcular ponto médio</button>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+var map = L.map('map').setView([-15,-55],4);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+maxZoom:19
+}).addTo(map);
+
+function addCity(){
+
+let div = document.getElementById("inputs");
+
+let input = document.createElement("input");
+input.placeholder="Digite outra cidade";
+input.className="city";
+
+div.appendChild(document.createElement("br"));
+div.appendChild(input);
+
+}
+
+async function getCoords(city){
+
+let url = `https://nominatim.openstreetmap.org/search?format=json&q=${city}`;
+
+let res = await fetch(url);
+let data = await res.json();
+
+return {
+lat: parseFloat(data[0].lat),
+lon: parseFloat(data[0].lon)
+};
+
+}
+
+async function calcular(){
+
+let cities = document.querySelectorAll(".city");
+
+let coords = [];
+
+for(let city of cities){
+
+if(city.value.trim()!=""){
+
+let c = await getCoords(city.value);
+
+coords.push(c);
+
+L.marker([c.lat,c.lon])
+.addTo(map)
+.bindPopup(city.value);
+
+}
+
+}
+
+let latSum = 0;
+let lonSum = 0;
+
+for(let c of coords){
+
+latSum += c.lat;
+lonSum += c.lon;
+
+}
+
+let midLat = latSum / coords.length;
+let midLon = lonSum / coords.length;
+
+L.marker([midLat,midLon])
+.addTo(map)
+.bindPopup("Centro médio");
+
+map.setView([midLat,midLon],5);
+
+}
+
+</script>
+
+</body>
+</html>
